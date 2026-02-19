@@ -1,0 +1,16 @@
+{
+    "projectName": "Topu",
+    "languages": [
+        {
+            "id": "topu",
+            "grammar": "src/topu.langium",
+            "fileExtensions": [
+                "topu"
+            ],
+            "textMate": {
+                "out": "syntaxes/topu.tmLanguage.json"
+            }
+        }
+    ],
+    "out": "src/generated"
+}
