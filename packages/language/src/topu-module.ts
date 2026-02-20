@@ -1,32 +1,54 @@
-import { type Module, inject } from 'langium';
-import { createDefaultModule, createDefaultSharedModule, type DefaultSharedModuleContext, type LangiumServices, type LangiumSharedServices, type PartialLangiumServices } from 'langium/lsp';
-import { TopuGeneratedModule, TopuGeneratedSharedModule } from './generated/module.js';
-import { TopuValidator, registerValidationChecks } from './topu-validator.js';
+import { inject, type Module } from "langium";
+import {
+    createDefaultModule,
+    createDefaultSharedModule,
+    type DefaultSharedModuleContext,
+    type LangiumServices,
+    type LangiumSharedServices,
+    type PartialLangiumServices,
+} from "langium/lsp";
+import {
+    TopuGeneratedModule,
+    TopuGeneratedSharedModule,
+} from "./generated/module.js";
+import { registerValidationChecks, TopuValidator } from "./topu-validator.js";
+import { TopuScopeProvider } from "./topu-scope.js";
+import { TopuLinker } from "./topu-linker.js";
 
 /**
  * Declaration of custom services - add your own service classes here.
  */
 export type TopuAddedServices = {
     validation: {
-        TopuValidator: TopuValidator
-    }
-}
+        TopuValidator: TopuValidator;
+    };
+    references: {
+        ScopeProvider: TopuScopeProvider;
+    };
+};
 
 /**
  * Union of Langium default services and your custom services - use this as constructor parameter
  * of custom service classes.
  */
-export type TopuServices = LangiumServices & TopuAddedServices
+export type TopuServices = LangiumServices & TopuAddedServices;
 
 /**
  * Dependency injection module that overrides Langium default services and contributes the
  * declared custom services. The Langium defaults can be partially specified to override only
  * selected services, while the custom services must be fully specified.
  */
-export const TopuModule: Module<TopuServices, PartialLangiumServices & TopuAddedServices> = {
+export const TopuModule: Module<
+    TopuServices,
+    PartialLangiumServices & TopuAddedServices
+> = {
     validation: {
-        TopuValidator: () => new TopuValidator()
-    }
+        TopuValidator: () => new TopuValidator(),
+    },
+    references: {
+        ScopeProvider: (services) => new TopuScopeProvider(services),
+        Linker: (services) => new TopuLinker(services),
+    },
 };
 
 /**
@@ -45,17 +67,17 @@ export const TopuModule: Module<TopuServices, PartialLangiumServices & TopuAdded
  * @returns An object wrapping the shared services and the language-specific services
  */
 export function createTopuServices(context: DefaultSharedModuleContext): {
-    shared: LangiumSharedServices,
-    Topu: TopuServices
+    shared: LangiumSharedServices;
+    Topu: TopuServices;
 } {
     const shared = inject(
         createDefaultSharedModule(context),
-        TopuGeneratedSharedModule
+        TopuGeneratedSharedModule,
     );
     const Topu = inject(
         createDefaultModule({ shared }),
+        TopuModule,
         TopuGeneratedModule,
-        TopuModule
     );
     shared.ServiceRegistry.register(Topu);
     registerValidationChecks(Topu);

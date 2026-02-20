@@ -6,6 +6,8 @@ entry Model:
 Namespace:
     '@' name=Nsid '{' (records+=Record | objects+=Obj | functions+=Fn)* '}';
 
+type Definition = Obj | Record;
+
 Obj:
     name=ID body=Declarations;
 
@@ -19,7 +21,7 @@ Fn:
     type=("get" | "post") name=ID props=Props '->' body=Declarations;
 
 Property:
-    key=ID (optional?='?')? ':' value=(Ref | Type | Union);
+    key=ID (optional?='?')? ':' value=(Type | Union | Ref);
 
 Props:
     '(' (props+=Property (',' props+=Property)*)? ')';
@@ -31,10 +33,13 @@ Param:
     key=ID "=" value=(STRING | INT | Boolean | Slice);
 
 Type:
-    name=ID (props=Params)? (array=List)?;
+    type=[Builtin] (props=Params)? (array=List)?;
+
+Builtin:
+    name=ID;
 
 Ref:
-    "#" name=ID (array=List)?;
+    "#" ref=[Definition] (array=List)?;
 
 List:
     '[' (slice=Slice)? ']';
@@ -44,8 +49,10 @@ Union:
 
 Slice:
     (min=INT '..' max=INT | min=INT '..' | '..' max=INT);
+
 Nsid:
     segments+=ID ('.' segments+=ID)+;
+
 Boolean:
     value?='True' | 'False';
 
