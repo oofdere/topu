@@ -1,13 +1,53 @@
 grammar Topu
 
 entry Model:
-    (persons+=Person | greetings+=Greeting)*;
+    (namespaces+=Namespace)*;
 
-Person:
-    'person' name=ID;
+Namespace:
+    '@' name=Nsid '{' (records+=Record | objects+=Obj | functions+=Fn)* '}';
 
-Greeting:
-    'Hello' person=[Person:ID] '!';
+Obj:
+    name=ID body=Declarations;
+
+Record:
+    'record' name=ID body=Declarations;
+
+Declarations:
+    '{' ((properties+=Property | refs+=Ref) ';')* '}';
+
+Fn:
+    type=("get" | "post") name=ID props=Props '->' body=Declarations;
+
+Property:
+    key=ID (optional?='?')? ':' value=(Ref | Type | Union);
+
+Props:
+    '(' (props+=Property (',' props+=Property)*)? ')';
+
+Params:
+    '(' (params+=Param (',' params+=Param)*)? ')';
+
+Param:
+    key=ID "=" value=(STRING | INT | Boolean | Slice);
+
+Type:
+    name=ID (props=Params)? (array=List)?;
+
+Ref:
+    "#" name=ID (array=List)?;
+
+List:
+    '[' (slice=Slice)? ']';
+
+Union:
+    types+=(Type | Ref) ('|' types+=(Type | Ref))*;
+
+Slice:
+    (min=INT '..' max=INT | min=INT '..' | '..' max=INT);
+Nsid:
+    segments+=ID ('.' segments+=ID)+;
+Boolean:
+    value?='True' | 'False';
 
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
