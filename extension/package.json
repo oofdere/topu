@@ -1,0 +1,24 @@
+{
+    "name": "topu",
+    "displayName": "Topu",
+    "version": "0.0.1",
+    "type": "module",
+    "engines": { "vscode": "^1.89.0" },
+    "activationEvents": ["onLanguage:topu"],
+    "main": "./extension.js",
+    "contributes": {
+        "languages": [{
+            "id": "topu",
+            "extensions": [".topu"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "topu",
+            "scopeName": "source.topu",
+            "path": "../syntaxes/topu.tmLanguage.json"
+        }]
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
+    }
+}

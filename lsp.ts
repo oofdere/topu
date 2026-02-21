@@ -13,6 +13,8 @@ export function startStdio() {
     startLanguageServer(shared);
 }
 
+startStdio();
+
 export function startSocket(port: number) {
     const server = createServer((socket: Socket) => {
         socket.on("error", console.error);

@@ -33,10 +33,11 @@ Param:
     key=ID "=" value=(STRING | INT | Boolean | Slice);
 
 Type:
-    type=[Builtin] (props=Params)? (array=List)?;
+    type=[Builtin:ID] (props=Params)? (array=List)?;
 
-Builtin:
-    name=ID;
+interface Builtin {
+    name: string
+}
 
 Ref:
     "#" ref=[Definition] (array=List)?;
