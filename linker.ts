@@ -1,5 +1,5 @@
 import { AstNode, AstNodeDescription, DefaultLinker } from "langium";
-import { Builtin } from "./generated/ast.js";
+import { Builtin } from "./generated/ast.ts";
 
 export class TopuLinker extends DefaultLinker {
     override loadAstNode(

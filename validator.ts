@@ -1,13 +1,13 @@
-import type { ValidationChecks } from 'langium';
-import type { TopuAstType } from './generated/ast.js';
-import type { TopuServices } from './topu-module.js';
+import type { ValidationChecks } from "langium";
+import type { TopuAstType } from "./generated/ast.ts";
+import type { TopuServices } from "./module.ts";
 
 /**
  * Register custom validation checks.
  */
 export function registerValidationChecks(services: TopuServices) {
     const registry = services.validation.ValidationRegistry;
-    const validator = services.validation.TopuValidator;
+    const validator = services.validation.Validator;
     const checks: ValidationChecks<TopuAstType> = {
         // Person: validator.checkPersonStartsWithCapital
     };
@@ -18,7 +18,6 @@ export function registerValidationChecks(services: TopuServices) {
  * Implementation of custom validations.
  */
 export class TopuValidator {
-
     // checkPersonStartsWithCapital(person: Person, accept: ValidationAcceptor): void {
     //     if (person.name) {
     //         const firstChar = person.name.substring(0, 1);
@@ -27,5 +26,4 @@ export class TopuValidator {
     //         }
     //     }
     // }
-
 }
