@@ -11,7 +11,7 @@ import {
     TopuGeneratedModule,
     TopuGeneratedSharedModule,
 } from "./generated/module.ts";
-import { registerValidationChecks, TopuValidator } from "./validator.ts";
+import { TopuValidationRegistry } from "./validator.ts";
 import { TopuScopeProvider } from "./scope.ts";
 import { TopuLinker } from "./linker.ts";
 
@@ -20,7 +20,7 @@ export const TopuModule: Module<
     PartialLangiumServices & TopuAddedServices
 > = {
     validation: {
-        Validator: () => new TopuValidator(),
+        ValidationRegistry: (x) => new TopuValidationRegistry(x),
     },
     references: {
         ScopeProvider: (services) => new TopuScopeProvider(services),
@@ -42,7 +42,7 @@ export function createTopuServices(context: DefaultSharedModuleContext): {
         TopuGeneratedModule,
     );
     shared.ServiceRegistry.register(Topu);
-    registerValidationChecks(Topu);
+    //registerValidationChecks(Topu);
     if (!context.connection) {
         // We don't run inside a language server
         // Therefore, initialize the configuration provider instantly
@@ -53,7 +53,7 @@ export function createTopuServices(context: DefaultSharedModuleContext): {
 
 export type TopuAddedServices = {
     validation: {
-        Validator: TopuValidator;
+        ValidationRegistry: TopuValidationRegistry;
     };
     references: {
         ScopeProvider: TopuScopeProvider;

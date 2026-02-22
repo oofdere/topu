@@ -9,19 +9,19 @@ Namespace:
 type Definition = Obj | Record;
 
 Obj:
-    name=ID body=Declarations;
+    (doc=STRING)? name=ID body=Declarations;
 
 Record:
-    'record' name=ID body=Declarations;
+    (doc=STRING)? 'record' name=ID body=Declarations;
 
 Declarations:
-    '{' ((properties+=Property | refs+=Ref) ';')* '}';
+    '{' ((properties+=Property | refs+=LocalRef) ';')* '}';
 
 Fn:
-    type=("get" | "post") name=ID props=Props '->' body=Declarations;
+    (doc=STRING)? type=("get" | "post") name=ID props=Props ('->' | '=>') body=Declarations;
 
 Property:
-    key=ID (optional?='?')? ':' value=(Type | Union | Ref);
+    (doc=STRING)? key=ID (optional?='?')? ':' value=(Type | Union | GlobalRef | LocalRef);
 
 Props:
     '(' (props+=Property (',' props+=Property)*)? ')';
@@ -33,20 +33,22 @@ Param:
     key=ID "=" value=(STRING | INT | Boolean | Slice);
 
 Type:
-    type=[Builtin:ID] (props=Params)? (array=List)?;
+    type=Builtin (props=Params)? (array=List)?;
 
-interface Builtin {
-    name: string
-}
+Builtin returns string:
+    'String' | 'Integer' | 'Boolean' | 'Blob' | 'DateTime' | 'Did' | 'Uri';
 
-Ref:
+GlobalRef:
+    nsid=Nsid ("#" view=ID)? (array=List)?;
+
+LocalRef:
     "#" ref=[Definition] (array=List)?;
 
 List:
     '[' (slice=Slice)? ']';
 
 Union:
-    types+=(Type | Ref) ('|' types+=(Type | Ref))*;
+    types+=(Type | LocalRef | GlobalRef) ('|' types+=(Type | LocalRef | GlobalRef))*;
 
 Slice:
     (min=INT '..' max=INT | min=INT '..' | '..' max=INT);
