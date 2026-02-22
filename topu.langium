@@ -1,7 +1,10 @@
 grammar Topu
 
 entry Model:
-    (namespaces+=Namespace)*;
+    (Decorator)? (namespaces+=Namespace)*;
+
+Decorator:
+    "#[" Param "]";
 
 Namespace:
     '@' name=Nsid '{' (records+=Record | objects+=Obj | functions+=Fn)* '}';
@@ -15,13 +18,13 @@ Record:
     (doc=STRING)? 'record' name=ID body=Declarations;
 
 Declarations:
-    '{' ((properties+=Property | refs+=LocalRef) ';')* '}';
+    '{' ((properties+=Property | refs+=LocalRef | objects+=Obj) ';')* '}';
 
 Fn:
     (doc=STRING)? type=("get" | "post") name=ID props=Props ('->' | '=>') body=Declarations;
 
 Property:
-    (doc=STRING)? key=ID (optional?='?')? ':' value=(Type | Union | GlobalRef | LocalRef);
+    (doc=STRING)? key=ID (optional?='?')? ':' value=Union;
 
 Props:
     '(' (props+=Property (',' props+=Property)*)? ')';
@@ -48,7 +51,7 @@ List:
     '[' (slice=Slice)? ']';
 
 Union:
-    types+=(Type | LocalRef | GlobalRef) ('|' types+=(Type | LocalRef | GlobalRef))*;
+    types+=(Type | LocalRef | GlobalRef | Declarations) ('|' types+=(Type | LocalRef | GlobalRef | Declarations))*;
 
 Slice:
     (min=INT '..' max=INT | min=INT '..' | '..' max=INT);
