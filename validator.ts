@@ -24,7 +24,7 @@ const paramLookup: Record<Builtin, Record<string, (item: unknown) => boolean>> =
             const: isNumber,
         },
         String: {
-            // format
+            format: isString,
             length: isSlice,
             graphemes: isSlice,
             // knownValues

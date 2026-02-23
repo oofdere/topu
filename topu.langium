@@ -4,7 +4,7 @@ entry Model:
     (Decorator)? (namespaces+=Namespace)*;
 
 Decorator:
-    "#[" Param "]";
+    "#[" param=Param "]";
 
 Namespace:
     '@' name=Nsid '{' (records+=Record | objects+=Obj | functions+=Fn)* '}';
@@ -12,19 +12,19 @@ Namespace:
 type Definition = Obj | Record;
 
 Obj:
-    (doc=STRING)? name=ID body=Declarations;
+    (doc=STRING)? name=NameID body=Declarations;
 
 Record:
-    (doc=STRING)? 'record' name=ID body=Declarations;
+    (doc=STRING)? 'record' name=NameID body=Declarations;
 
 Declarations:
-    '{' ((properties+=Property | refs+=LocalRef | objects+=Obj) ';')* '}';
+    '{' ((properties+=Property | refs+=LocalRef | objects+=Obj | atoms+=AtomDecl) ';')* '}';
 
 Fn:
-    (doc=STRING)? type=("get" | "post") name=ID props=Props ('->' | '=>') body=Declarations;
+    (doc=STRING)? type=("subscribe" | "query" | "mutation") name=NameID props=Props ('->' | '=>') body=Declarations;
 
 Property:
-    (doc=STRING)? key=ID (optional?='?')? ':' value=Union;
+    (doc=STRING)? key=NameID (optional?='?')? ':' value=Union;
 
 Props:
     '(' (props+=Property (',' props+=Property)*)? ')';
@@ -33,7 +33,7 @@ Params:
     '(' (params+=Param (',' params+=Param)*)? ')';
 
 Param:
-    key=ID "=" value=(STRING | INT | Boolean | Slice);
+    key=NameID "=" value=(STRING | INT | Boolean | Slice);
 
 Type:
     type=Builtin (props=Params)? (array=List)?;
@@ -42,7 +42,7 @@ Builtin returns string:
     'String' | 'Integer' | 'Boolean' | 'Blob' | 'DateTime' | 'Did' | 'Uri';
 
 GlobalRef:
-    nsid=Nsid ("#" view=ID)? (array=List)?;
+    nsid=Nsid ("#" view=NameID)? (array=List)?;
 
 LocalRef:
     "#" ref=[Definition] (array=List)?;
@@ -50,17 +50,38 @@ LocalRef:
 List:
     '[' (slice=Slice)? ']';
 
+Atom:
+    ":" atom=[AtomDecl];
+
+AtomDecl:
+    "atom" ":"? name=NameID ";";
+
+UnionItem:
+    Type | LocalRef | GlobalRef | Declarations | Atom;
+
 Union:
-    types+=(Type | LocalRef | GlobalRef | Declarations) ('|' types+=(Type | LocalRef | GlobalRef | Declarations))*;
+    forcedUnion?='|'? 
+    types+=UnionItem 
+    ('|' types+=UnionItem)* closedUnion?='||'?
+    |
+    forcedUnion?='(' '|'? 
+    types+=UnionItem 
+    ('|' types+=UnionItem)* closedUnion?='||'? ')' (array=List)?;
 
 Slice:
     (min=INT '..' max=INT | min=INT '..' | '..' max=INT);
 
 Nsid:
-    segments+=ID ('.' segments+=ID)+;
+    segments+=NameID ('.' segments+=NameID)+;
 
 Boolean:
     value?='True' | 'False';
+
+NameID returns string:
+    ID | 'record' | 'atom' | 'query' | 'mutation' | 'subscribe'
+    | 'String' | 'Integer' | 'Boolean' | 'Blob' | 'DateTime' | 'Did' | 'Uri'
+    | 'True' | 'False';
+
 
 hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;

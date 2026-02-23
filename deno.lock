@@ -5,10 +5,14 @@
     "jsr:@std/cli@^1.0.28": "1.0.28",
     "jsr:@std/fmt@^1.0.9": "1.0.9",
     "jsr:@std/internal@^1.0.12": "1.0.12",
+    "jsr:@std/regexp@^1.0.1": "1.0.1",
+    "jsr:@std/text@^1.0.17": "1.0.17",
     "npm:langium-cli@*": "4.2.0",
     "npm:langium-cli@3.3.0": "3.3.0",
     "npm:langium-cli@^4.2.0": "4.2.0",
     "npm:langium@^4.2.1": "4.2.1_chevrotain@11.1.1",
+    "npm:ts-pattern@^5.9.0": "5.9.0",
+    "npm:typescript@^5.9.3": "5.9.3",
     "npm:vitest@^4.0.18": "4.0.18_vite@7.3.1__picomatch@4.0.3",
     "npm:vscode-languageserver@^9.0.1": "9.0.1"
   },
@@ -31,6 +35,15 @@
     },
     "@std/internal@1.0.12": {
       "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    },
+    "@std/regexp@1.0.1": {
+      "integrity": "5179d823465085c5480dafb44438466e83c424fadc61ba31f744050ecc0f596d"
+    },
+    "@std/text@1.0.17": {
+      "integrity": "4b2c4ef67ae5b6c1dfd447c81c83a43718f52e3c7e748d8b33f694aba9895f95",
+      "dependencies": [
+        "jsr:@std/regexp"
+      ]
     }
   },
   "npm": {
@@ -722,6 +735,13 @@
     "tinyrainbow@3.0.3": {
       "integrity": "sha512-PSkbLUoxOFRzJYjjxHJt9xro7D+iilgMX/C9lawzVuYiIdcihh9DXmVibBe8lmcFrRi/VzlPjBxbN7rH24q8/Q=="
     },
+    "ts-pattern@5.9.0": {
+      "integrity": "sha512-6s5V71mX8qBUmlgbrfL33xDUwO0fq48rxAu2LBE11WBeGdpCPOsXksQbZJHvHwhrd3QjUusd3mAOM5Gg0mFBLg=="
+    },
+    "typescript@5.9.3": {
+      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+      "bin": true
+    },
     "universalify@2.0.1": {
       "integrity": "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw=="
     },
@@ -808,8 +828,11 @@
     "dependencies": [
       "jsr:@std/assert@1",
       "jsr:@std/cli@^1.0.28",
+      "jsr:@std/text@^1.0.17",
       "npm:langium-cli@^4.2.0",
       "npm:langium@^4.2.1",
+      "npm:ts-pattern@^5.9.0",
+      "npm:typescript@^5.9.3",
       "npm:vitest@^4.0.18",
       "npm:vscode-languageserver@^9.0.1"
     ]
