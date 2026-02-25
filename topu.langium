@@ -36,16 +36,16 @@ Param:
     key=NameID "=" value=(STRING | INT | Boolean | Slice);
 
 Type:
-    type=Builtin (props=Params)? (array=List)?;
+    type=Builtin (props=Params)?;
 
 Builtin returns string:
     'String' | 'Integer' | 'Boolean' | 'Blob' | 'DateTime' | 'Did' | 'Uri';
 
 GlobalRef:
-    nsid=Nsid ("#" view=NameID)? (array=List)?;
+    nsid=Nsid ("#" view=NameID)?;
 
 LocalRef:
-    "#" ref=[Definition] (array=List)?;
+    "#" ref=[Definition];
 
 List:
     '[' (slice=Slice)? ']';
@@ -57,16 +57,15 @@ AtomDecl:
     "atom" ":"? name=NameID ";";
 
 UnionItem:
-    Type | LocalRef | GlobalRef | Declarations | Atom;
+    Type | LocalRef | GlobalRef | Declarations | Atom | UnitUnion;
 
 Union:
     forcedUnion?='|'? 
     types+=UnionItem 
-    ('|' types+=UnionItem)* closedUnion?='||'?
-    |
-    forcedUnion?='(' '|'? 
-    types+=UnionItem 
-    ('|' types+=UnionItem)* closedUnion?='||'? ')' (array=List)?;
+    ('|' types+=UnionItem)* closedUnion?='||'? (array=List)?;
+
+UnitUnion:
+    '(' Union ')';
 
 Slice:
     (min=INT '..' max=INT | min=INT '..' | '..' max=INT);

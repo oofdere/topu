@@ -48,6 +48,10 @@ function extractNamespace(
     return lexicons;
 }
 
+function extractRequired(x: { key: string; optional: boolean }[]) {
+    return x.filter((x) => !x.optional).map((x) => x.key);
+}
+
 function extractRecord(x: AST.Record, nsid: string) {
     const { main, defs } = extractDeclarations(x.body);
 
@@ -56,8 +60,13 @@ function extractRecord(x: AST.Record, nsid: string) {
         defs: {
             main: {
                 type: "record",
+                key: "tid", // TODO support other key types
                 description: x.doc,
-                properties: main,
+                record: {
+                    type: "object",
+                    required: extractRequired(x.body.properties),
+                    properties: main,
+                },
             },
             ...defs,
         },
@@ -118,24 +127,47 @@ function extractProperty(
 function extractUnion(
     { closedUnion, forcedUnion, types, array, ...x }: AST.Union,
 ) {
-    if (types.length === 1 && !closedUnion && !forcedUnion) {
-        return extractUnionItem(types[0]);
-    }
+    const inner = types.length === 1 && !closedUnion && !forcedUnion
+        ? extractUnionItem(types[0])
+        : {
+            type: "union",
+            closed: closedUnion ? true : undefined,
+            refs: types.map((x) => extractRefString(x)),
+        };
 
-    return {
-        type: "union",
-        closed: closedUnion,
-        refs: types.map((x) => extractUnionItem(x)),
-    };
+    return array
+        ? {
+            type: "array",
+            minLength: array.slice?.min,
+            maxLength: array.slice?.max,
+            items: inner,
+        }
+        : inner;
 }
 
-function extractUnionItem(x: AST.UnionItem) {
+// TODO: this sucks but fixing will require AST changes
+// I thought unions could hold actual types but they only hold refs bleh
+function extractRefString(t: AST.UnionItem): string {
+    return match(t)
+        .with({ $type: "LocalRef" }, (x) => `#${x.ref.$refText}`)
+        .with(
+            { $type: "GlobalRef" },
+            (x) => x.nsid.segments.join(".") + (x.view ? `#${x.view}` : ""),
+        )
+        .with({ $type: "Atom" }, (x) => `#${x.atom.$refText}`)
+        .otherwise(() => {
+            throw new Error("Union members must be refs");
+        });
+}
+
+function extractUnionItem(x: AST.UnionItem): Record<string, unknown> {
     return match(x)
         .with({ $type: "Atom" }, (x) => extractAtom(x))
         .with({ $type: "Type" }, (x) => extractType(x))
         .with({ $type: "Declarations" }, (x) => extractDeclarations(x))
         .with({ $type: "GlobalRef" }, (x) => extractGlobalRef(x))
         .with({ $type: "LocalRef" }, (x) => extractLocalRef(x))
+        .with({ $type: "Union" }, (x) => extractUnion(x))
         .exhaustive();
 }
 
@@ -146,7 +178,7 @@ function extractAtom(x: AST.Atom) {
     };
 }
 
-function extractType({ type, array, props, ...x }: AST.Type) {
+function extractType({ type, props, ...x }: AST.Type) {
     const params: Record<string, unknown> = {};
     if (props?.params) {
         for (const p of props?.params) {
