@@ -12,7 +12,7 @@ Namespace:
 type Definition = Obj | Record;
 
 Obj:
-    (doc=STRING)? name=NameID body=Declarations;
+    (doc=STRING)? name=NameID "{" (properties+=Property ";")* "}";
 
 Record:
     (doc=STRING)? 'record' name=NameID body=Declarations;

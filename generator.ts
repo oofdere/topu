@@ -34,90 +34,122 @@ const skipCircular = (key: string, value: unknown) =>
 
 //console.log(JSON.stringify(model, skipCircular, 2));
 
-function extractNamespace(ns: AST.Namespace) {
-    const nsid = ns.name.segments.join(".");
+function extractNamespace(
+    { name, records, objects, functions }: AST.Namespace,
+) {
+    const nsid = name.segments.join(".");
 
-    const records = ns.records.map((r) => {
-        return {
-            lexicon: 1,
-            id: nsid + "." + r.name,
-            description: r.doc,
-            defs: extractDeclarations(r.body),
-        };
-    });
+    const lexicons = [
+        ...records.map((r) => extractRecord(r, nsid)),
+        ...objects.map((o) => extractObject(o, nsid)),
+        ...functions.map((f) => extractFunction(f, nsid)),
+    ];
 
-    return records;
+    return lexicons;
+}
+
+function extractRecord(x: AST.Record, nsid: string) {
+    const { main, defs } = extractDeclarations(x.body);
+
+    return {
+        id: `${nsid}.${x.name}`,
+        defs: {
+            main: {
+                type: "record",
+                description: x.doc,
+                properties: main,
+            },
+            ...defs,
+        },
+    };
+}
+
+function extractObject(x: AST.Obj, nsid: string) {
+    return {
+        id: `${nsid}.${x.name}`,
+        defs: {
+            main: {
+                type: "object",
+            },
+        },
+    };
+}
+
+function extractFunction(x: AST.Fn, nsid: string) {
+    return {
+        id: `${nsid}.${x.name}`,
+        defs: {
+            main: {
+                type: "function",
+            },
+        },
+    };
 }
 
 function extractDeclarations(
-    { atoms, objects, properties, refs }: AST.Declarations,
+    { atoms, objects, properties, refs, ...x }: AST.Declarations,
+    nsid?: string,
 ) {
-    const props: Record<string, unknown> = {};
-    for (const property of properties) {
-        props[property.key] = extractUnion(property.value);
-    }
-
-    for (const r of refs) {
-        const ref = r.ref.$refText;
-        console.log(r);
-        props[ref] = {
-            type: "refrefgiojerig",
-            ref: `#${ref}`,
-        };
-    }
-
-    return { main: { type: "record", key: "tid", record: props } };
+    return {
+        main: Object.fromEntries([
+            ...properties.map((x) => [x.key, extractProperty(x)]),
+            ...refs.map((x) => [x.ref.$refText, extractLocalRef(x)]),
+        ]),
+        defs: Object.fromEntries([
+            ...objects.map((x) => extractObjectDeclaration(x)),
+            ...atoms.map((x) => extractAtomDeclaration(x)),
+        ]),
+    };
 }
 
-function extractUnion(u: AST.Union) {
-    const singleMember = u.types.length === 1;
-
-    if (!singleMember || u.forcedUnion) {
-        return {
-            type: "union",
-            closed: !!u.closedUnion,
-            refs: u.types.map((x) => extractUnionItem(x)),
-        };
-    } else {
-        return extractUnionItem(u.types[0]);
-    }
+function extractLocalRef({ ref, ...x }: AST.LocalRef) {
+    return {
+        type: "ref" as const,
+        ref: `#${ref.$refText}`,
+    };
 }
 
-function extractUnionItem(t: AST.UnionItem, doc?: string) {
-    // todo add docs to AST and accomodate them here
-    const type = match(t)
-        .with({ $type: "Atom" }, () => "atom")
+function extractProperty(
+    { doc, key, value, ...x }: AST.Property,
+): Record<string, unknown> {
+    return { description: doc, ...extractUnion(value) };
+}
+
+function extractUnion(
+    { closedUnion, forcedUnion, types, array, ...x }: AST.Union,
+) {
+    if (types.length === 1 && !closedUnion && !forcedUnion) {
+        return extractUnionItem(types[0]);
+    }
+
+    return {
+        type: "union",
+        closed: closedUnion,
+        refs: types.map((x) => extractUnionItem(x)),
+    };
+}
+
+function extractUnionItem(x: AST.UnionItem) {
+    return match(x)
+        .with({ $type: "Atom" }, (x) => extractAtom(x))
         .with({ $type: "Type" }, (x) => extractType(x))
-        .with({ $type: "Declarations" }, (x) => console.log("decl", x))
-        .with(
-            { $type: "GlobalRef" },
-            ({ nsid, view }) => ({
-                type: "ref",
-                ref: nsid.segments.join(".") + (view ? `#${view}` : ""),
-            }),
-        )
-        .with({ $type: "LocalRef" }, ({ ref }) => ({
-            type: "ref",
-            ref: `#${ref.ref!.name}`,
-        }))
+        .with({ $type: "Declarations" }, (x) => extractDeclarations(x))
+        .with({ $type: "GlobalRef" }, (x) => extractGlobalRef(x))
+        .with({ $type: "LocalRef" }, (x) => extractLocalRef(x))
         .exhaustive();
-
-    if ("array" in t && t.array) {
-        return {
-            type: "array",
-            items: type,
-            minLength: t.array.slice?.min,
-            maxLength: t.array.slice?.max,
-        };
-    } else {
-        return type;
-    }
 }
 
-function extractType(t: AST.Type) {
+function extractAtom(x: AST.Atom) {
+    return {
+        type: "ref",
+        ref: `#${x.atom.$refText}`,
+    };
+}
+
+function extractType({ type, array, props, ...x }: AST.Type) {
     const params: Record<string, unknown> = {};
-    if (t.props?.params) {
-        for (const p of t.props?.params) {
+    if (props?.params) {
+        for (const p of props?.params) {
             match(p.value)
                 .with({ $type: "Slice" }, ({ min, max }) => {
                     params[toCamelCase("min " + p.key)] = min;
@@ -131,7 +163,7 @@ function extractType(t: AST.Type) {
         }
     }
 
-    return match(t.type)
+    return match(type)
         .with("String", () => ({ type: "string", ...params }))
         .with("Integer", () => ({ type: "integer", ...params }))
         .with("Boolean", () => ({ type: "boolean" }))
@@ -142,7 +174,110 @@ function extractType(t: AST.Type) {
         .exhaustive();
 }
 
+function extractGlobalRef({ nsid, array, ...x }: AST.GlobalRef) {
+    return {
+        type: "ref",
+        ref: `${nsid.segments.join(".")}${x.view ? `#${x.view}` : ""}`,
+    };
+}
+
+function extractObjectDeclaration(x: AST.Obj) {
+    return [x.name, { todo: true }];
+}
+
+function extractAtomDeclaration(x: AST.AtomDecl) {
+    return [x.name, { todo: true }];
+}
+
 const output = JSON.parse(
     JSON.stringify(extractNamespace(model.namespaces[0])),
 );
-console.log(Deno.inspect(output, { depth: Infinity, colors: true }));
+console.log(
+    Deno.inspect(output, { depth: Infinity, colors: true, compact: false }),
+);
+
+// function extractDeclarations(
+//     { atoms, objects, properties, refs }: AST.Declarations,
+// ) {
+//     const props: Record<string, unknown> = {};
+//     for (const property of properties) {
+//         props[property.key] = extractUnion(property.value);
+//     }
+
+//     for (const r of refs) {
+//
+//     }
+
+//     const obj: Record<string, unknown> = {};
+//     for (const o of objects) {
+//         console.log("extracting" + o.name);
+//         obj[o.name] = extractObj(o);
+//         console.log(obj);
+//     }
+
+//     return {
+//         required: properties.filter((x) => !x.optional).map((x) => x.key),
+//         main: props,
+//         ...obj,
+//     };
+// }
+
+// function extractObj(o: AST.Obj) {
+//     for (const prop of o.properties) {
+//     }
+//     return {
+//         type: "object",
+//         description: undefined,
+//         required: o.properties.filter((x) => !x.optional).map((x) => x.key),
+//         nullable: undefined,
+//     };
+// }
+
+// function extractUnion(u: AST.Union) {
+//     const singleMember = u.types.length === 1;
+
+//     if (!singleMember || u.forcedUnion) {
+//         return {
+//             type: "union",
+//             closed: !!u.closedUnion,
+//             refs: u.types.map((x) => extractUnionItem(x)),
+//         };
+//     } else {
+//         return extractUnionItem(u.types[0]);
+//     }
+// }
+
+// function extractUnionItem(t: AST.UnionItem, doc?: string) {
+//     // todo add docs to AST and accomodate them here
+//     const type = match(t)
+//         .with({ $type: "Atom" }, () => "atom")
+//         .with({ $type: "Type" }, (x) => extractType(x))
+//         .with({ $type: "Declarations" }, (x) => console.log("decl", x))
+//         .with(
+//             { $type: "GlobalRef" },
+//             ({ nsid, view }) => ({
+//                 type: "ref",
+//                 ref: nsid.segments.join(".") + (view ? `#${view}` : ""),
+//             }),
+//         )
+//         .with({ $type: "LocalRef" }, ({ ref }) => ({
+//             type: "ref",
+//             ref: `#${ref.ref!.name}`,
+//         }))
+//         .exhaustive();
+
+//     if ("array" in t && t.array) {
+//         return {
+//             type: "array",
+//             items: type,
+//             minLength: t.array.slice?.min,
+//             maxLength: t.array.slice?.max,
+//         };
+//     } else {
+//         return type;
+//     }
+// }
+
+// function extractType(t: AST.Type) {
+
+// }
