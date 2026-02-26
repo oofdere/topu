@@ -1,40 +1,8 @@
-import { createTopuServices } from "./module.ts";
-import { NodeFileSystem } from "langium/node";
-import { AstMetaData, Reduction, URI } from "langium";
-import { resolve } from "node:path";
 import { match } from "ts-pattern";
 import * as AST from "./generated/ast.js";
 import { toCamelCase } from "@std/text";
 
-const { shared } = createTopuServices({ ...NodeFileSystem });
-
-const filePath = resolve(Deno.args[0]);
-const uri = URI.file(filePath);
-
-const document = await shared.workspace.LangiumDocuments.getOrCreateDocument(
-    uri,
-);
-await shared.workspace.DocumentBuilder.build([document]);
-
-const parseErrors = document.parseResult.parserErrors;
-const linkErrors = (document.diagnostics ?? []).filter(
-    (d) => d.code === "linking-error",
-);
-
-if (parseErrors.length > 0 || linkErrors.length > 0) {
-    if (parseErrors.length) console.error("Parse errors:", parseErrors);
-    if (linkErrors.length) console.error("Link errors:", linkErrors);
-    Deno.exit(1);
-}
-
-const model = document.parseResult.value as AST.Model;
-
-const skipCircular = (key: string, value: unknown) =>
-    key.startsWith("$") ? undefined : value;
-
-//console.log(JSON.stringify(model, skipCircular, 2));
-
-function extractNamespace(
+export function extractNamespace(
     { name, records, objects, functions }: AST.Namespace,
 ) {
     const nsid = name.segments.join(".");
@@ -48,11 +16,11 @@ function extractNamespace(
     return lexicons;
 }
 
-function extractRequired(x: { key: string; optional: boolean }[]) {
+export function extractRequired(x: { key: string; optional: boolean }[]) {
     return x.filter((x) => !x.optional).map((x) => x.key);
 }
 
-function extractRecord(x: AST.Record, nsid: string) {
+export function extractRecord(x: AST.Record, nsid: string) {
     const { main, defs } = extractDeclarations(x.body);
 
     return {
@@ -73,7 +41,7 @@ function extractRecord(x: AST.Record, nsid: string) {
     };
 }
 
-function extractObject(x: AST.Obj, nsid: string) {
+export function extractObject(x: AST.Obj, nsid: string) {
     return {
         id: `${nsid}.${x.name}`,
         defs: {
@@ -84,7 +52,7 @@ function extractObject(x: AST.Obj, nsid: string) {
     };
 }
 
-function extractFunction(
+export function extractFunction(
     { name, type, doc, body, props, ..._ }: AST.Fn,
     nsid: string,
 ) {
@@ -114,7 +82,7 @@ function extractFunction(
     };
 }
 
-function extractDeclarations(
+export function extractDeclarations(
     { atoms, objects, properties, refs }: AST.Declarations,
 ) {
     return {
@@ -129,20 +97,20 @@ function extractDeclarations(
     };
 }
 
-function extractLocalRef({ ref, ...x }: AST.LocalRef) {
+export function extractLocalRef({ ref, ...x }: AST.LocalRef) {
     return {
         type: "ref" as const,
         ref: `#${ref.$refText}`,
     };
 }
 
-function extractProperty(
+export function extractProperty(
     { doc, value, ...x }: AST.Property,
 ): Record<string, unknown> {
     return { description: doc, ...extractUnion(value) };
 }
 
-function extractUnion(
+export function extractUnion(
     { closedUnion, forcedUnion, types, array, ..._ }: AST.Union,
 ) {
     const inner = types.length === 1 && !closedUnion && !forcedUnion
@@ -165,7 +133,7 @@ function extractUnion(
 
 // TODO: this sucks but fixing will require AST changes
 // I thought unions could hold actual types but they only hold refs bleh
-function extractRefString(t: AST.UnionItem): string {
+export function extractRefString(t: AST.UnionItem): string {
     return match(t)
         .with({ $type: "LocalRef" }, (x) => `#${x.ref.$refText}`)
         .with(
@@ -178,7 +146,7 @@ function extractRefString(t: AST.UnionItem): string {
         });
 }
 
-function extractUnionItem(x: AST.UnionItem): Record<string, unknown> {
+export function extractUnionItem(x: AST.UnionItem): Record<string, unknown> {
     return match(x)
         .with({ $type: "Atom" }, (x) => extractAtom(x))
         .with({ $type: "Type" }, (x) => extractType(x))
@@ -189,14 +157,14 @@ function extractUnionItem(x: AST.UnionItem): Record<string, unknown> {
         .exhaustive();
 }
 
-function extractAtom(x: AST.Atom) {
+export function extractAtom(x: AST.Atom) {
     return {
         type: "ref",
         ref: `#${x.atom.$refText}`,
     };
 }
 
-function extractType({ type, props, ..._ }: AST.Type) {
+export function extractType({ type, props, ..._ }: AST.Type) {
     const params: Record<string, unknown> = {};
     if (props?.params) {
         for (const p of props?.params) {
@@ -224,14 +192,16 @@ function extractType({ type, props, ..._ }: AST.Type) {
         .exhaustive();
 }
 
-function extractGlobalRef({ nsid, view, ..._ }: AST.GlobalRef) {
+export function extractGlobalRef({ nsid, view, ..._ }: AST.GlobalRef) {
     return {
         type: "ref",
         ref: `${nsid.segments.join(".")}${view ? `#${view}` : ""}`,
     };
 }
 
-function extractObjectDeclaration({ doc, properties, name, ..._ }: AST.Obj) {
+export function extractObjectDeclaration(
+    { doc, properties, name, ..._ }: AST.Obj,
+) {
     return [name, {
         type: "object",
         description: doc,
@@ -242,15 +212,8 @@ function extractObjectDeclaration({ doc, properties, name, ..._ }: AST.Obj) {
     }];
 }
 
-function extractAtomDeclaration(x: AST.AtomDecl) {
+export function extractAtomDeclaration(x: AST.AtomDecl) {
     return [x.name, {
         type: "token",
     }];
 }
-
-const output = JSON.parse(
-    JSON.stringify(extractNamespace(model.namespaces[0])),
-);
-console.log(
-    Deno.inspect(output, { depth: Infinity, colors: true, compact: false }),
-);
