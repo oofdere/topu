@@ -1,6 +1,6 @@
 # topu
 
-a NSID-less language for defining and managing atproto lexicons, with a type system, package manager, and code generation
+an (eventually and optimistically) NSID-less language for defining and managing atproto lexicons, with a type system, package manager, and code generation
 
 ## why NSIDless?
 
@@ -12,11 +12,7 @@ we clearly need an npm for this.
 
 ### old lexicons will work
 
-```
-shim { post, like } from "app.bsky"
-```
-
-you can declare stuff from legacy lexicons super easy
+yes there actually ARE nsids and in fact you need them right nowwwww, the main goal for now is 100% compat with lexicons and then we add an alternative to nsids later
 
 ## why a DSL
 
