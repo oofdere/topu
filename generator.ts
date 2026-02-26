@@ -56,7 +56,9 @@ export function extractFunction(
     { name, type, doc, body, encoding, throws, props, ..._ }: AST.Fn,
     nsid: string,
 ) {
-    const { main, defs } = extractDeclarations(body);
+    const { main, defs } = body
+        ? extractDeclarations(body)
+        : { main: {}, defs: {} };
 
     return {
         id: `${nsid}.${name}`,
