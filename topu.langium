@@ -21,7 +21,7 @@ Declarations:
     '{' ((properties+=Property | refs+=LocalRef | objects+=Obj | atoms+=AtomDecl) ';')* '}';
 
 Fn:
-    (doc=STRING)? type=("subscribe" | "query" | "mutation") name=NameID props=Props ('->' | '=>') body=Declarations;
+    (doc=STRING)? type=("subscribe" | "query" | "mutation") name=NameID props=Props (":" encoding=MIME)?  (body=Declarations)? ('throws' throws+=STRING (',' throws+=STRING)*)?;
 
 Property:
     (doc=STRING)? key=NameID (optional?='?')? ':' value=Union;
@@ -86,6 +86,7 @@ hidden terminal WS: /\s+/;
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal INT returns number: /[0-9]+/;
 terminal STRING: /"(\\.|[^"\\])*"|'(\\.|[^'\\])*'/;
+terminal MIME: /[a-z*]+\/[a-z0-9*+.\-]+/;
 
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;

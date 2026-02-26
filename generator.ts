@@ -53,7 +53,7 @@ export function extractObject(x: AST.Obj, nsid: string) {
 }
 
 export function extractFunction(
-    { name, type, doc, body, props, ..._ }: AST.Fn,
+    { name, type, doc, body, encoding, throws, props, ..._ }: AST.Fn,
     nsid: string,
 ) {
     const { main, defs } = extractDeclarations(body);
@@ -72,9 +72,10 @@ export function extractFunction(
                     ),
                 },
                 output: {
-                    encoding: "application/json", // TODO allow setting encoding in grammar,
+                    encoding: encoding || "application/json",
                     type: "object",
                     schema: main,
+                    errors: throws?.map((x) => ({ "name": x })),
                 },
             },
             ...defs,
