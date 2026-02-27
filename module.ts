@@ -14,6 +14,7 @@ import {
 import { TopuValidationRegistry } from "./validator.ts";
 import { TopuScopeProvider } from "./scope.ts";
 import { TopuLinker } from "./linker.ts";
+import { TopuSemanticTokenProvider } from "./semanticTokens.ts";
 
 export const TopuModule: Module<
     TopuServices,
@@ -25,6 +26,10 @@ export const TopuModule: Module<
     references: {
         ScopeProvider: (services) => new TopuScopeProvider(services),
         Linker: (services) => new TopuLinker(services),
+    },
+    lsp: {
+        SemanticTokenProvider: (services) =>
+            new TopuSemanticTokenProvider(services),
     },
 };
 

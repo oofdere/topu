@@ -4,10 +4,7 @@
         {
             "id": "topu",
             "grammar": "topu.langium",
-            "fileExtensions": [".topu"],
-            "textMate": {
-                "out": "syntaxes/topu.tmLanguage.json"
-            }
+            "fileExtensions": [".topu"]
         }
     ],
     "out": "generated"

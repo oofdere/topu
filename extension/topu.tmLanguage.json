@@ -1,0 +1,40 @@
+{
+  "name": "topu",
+  "scopeName": "source.topu",
+  "fileTypes": [".topu"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.topu",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.topu",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.topu",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.topu" }]
+        },
+        {
+          "name": "string.quoted.single.topu",
+          "begin": "'",
+          "end": "'",
+          "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.topu" }]
+        }
+      ]
+    }
+  }
+}

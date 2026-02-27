@@ -15,7 +15,7 @@
         "grammars": [{
             "language": "topu",
             "scopeName": "source.topu",
-            "path": "../syntaxes/topu.tmLanguage.json"
+            "path": "./topu.tmLanguage.json"
         }]
     },
     "dependencies": {
