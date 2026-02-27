@@ -41,12 +41,20 @@ export function extractRecord(x: AST.Record, nsid: string) {
     };
 }
 
-export function extractObject(x: AST.Obj, nsid: string) {
+export function extractObject(
+    { doc, name, properties, ..._ }: AST.Obj,
+    nsid: string,
+) {
     return {
-        id: `${nsid}.${x.name}`,
+        id: `${nsid}.${name}`,
         defs: {
             main: {
                 type: "object",
+                description: doc,
+                required: extractRequired(properties),
+                properties: Object.fromEntries(
+                    properties.map((x) => [x.key, extractProperty(x)]),
+                ),
             },
         },
     };
@@ -173,8 +181,15 @@ export function extractType({ type, props, ..._ }: AST.Type) {
         for (const p of props?.params) {
             match(p.value)
                 .with({ $type: "Slice" }, ({ min, max }) => {
-                    params[toCamelCase("min " + p.key)] = min;
-                    params[toCamelCase("max " + p.key)] = max;
+                    const isRange = p.key === "range";
+                    const minKey = isRange
+                        ? "minimum"
+                        : toCamelCase("min " + p.key);
+                    const maxKey = isRange
+                        ? "maximum"
+                        : toCamelCase("max " + p.key);
+                    if (min !== undefined) params[minKey] = min;
+                    if (max !== undefined) params[maxKey] = max;
                 })
                 .with(
                     { $type: "Boolean" },
