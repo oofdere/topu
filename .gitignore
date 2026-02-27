@@ -1,3 +1,4 @@
 generated
 syntaxes
 node_modules
+*.vsix

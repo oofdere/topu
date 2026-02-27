@@ -1,11 +1,15 @@
 {
     "name": "topu",
     "displayName": "Topu",
+    "description": "atproto lexicon dsl",
     "version": "0.0.1",
+    "publisher": "oofdere",
+    "categories": ["Programming Languages"],
+    "repository": { "type": "git", "url": "https://github.com/oofdere/topu" },
+    "keywords": ["atproto", "lexicon", "dsl", "bluesky", "schema"],
     "type": "module",
     "engines": { "vscode": "^1.89.0" },
-    "activationEvents": ["onLanguage:topu"],
-    "main": "./extension.js",
+    "main": "./out/extension.js",
     "contributes": {
         "languages": [{
             "id": "topu",
@@ -18,7 +22,9 @@
             "path": "./topu.tmLanguage.json"
         }]
     },
-    "dependencies": {
-        "vscode-languageclient": "^9.0.1"
+    "scripts": {
+        "build": "deno bundle --config ../deno.json ../lsp.ts -o out/server.js && deno bundle extension.js -o out/extension.js --external vscode",
+        "watch": "echo 'use: deno bundle --watch ../lsp.ts -o out/server.js'",
+        "package": "npm run build && npx -y @vscode/vsce package --no-dependencies -o ../out/topu.vsix"
     }
 }

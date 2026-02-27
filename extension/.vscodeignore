@@ -1,0 +1,5 @@
+**
+!out/
+!package.json
+!language-configuration.json
+!topu.tmLanguage.json

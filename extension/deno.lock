@@ -1,8 +1,5 @@
 {
   "version": "5",
-  "specifiers": {
-    "npm:vscode-languageclient@^9.0.1": "9.0.1"
-  },
   "npm": {
     "balanced-match@1.0.2": {
       "integrity": "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="
@@ -43,13 +40,6 @@
     },
     "vscode-languageserver-types@3.17.5": {
       "integrity": "sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg=="
-    }
-  },
-  "workspace": {
-    "packageJson": {
-      "dependencies": [
-        "npm:vscode-languageclient@^9.0.1"
-      ]
     }
   }
 }

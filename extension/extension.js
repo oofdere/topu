@@ -2,16 +2,18 @@ import { LanguageClient, TransportKind } from "vscode-languageclient/node.js";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const lspPath = resolve(projectRoot, "lsp.ts");
+const extensionDir = dirname(fileURLToPath(import.meta.url));
+const serverPath = resolve(extensionDir, "server.js");
 
 let client;
 
 export function activate() {
-    client = new LanguageClient("topu", "Topu LSP", {
-        run:   { command: "deno", args: ["run", "--allow-all", lspPath], transport: TransportKind.stdio, options: { cwd: projectRoot } },
-        debug: { command: "deno", args: ["run", "--allow-all", lspPath], transport: TransportKind.stdio, options: { cwd: projectRoot } },
-    }, {
+    const serverOptions = {
+        run:   { module: serverPath, transport: TransportKind.ipc },
+        debug: { module: serverPath, transport: TransportKind.ipc },
+    };
+
+    client = new LanguageClient("topu", "Topu LSP", serverOptions, {
         documentSelector: [{ scheme: "file", language: "topu" }],
     });
     client.start();

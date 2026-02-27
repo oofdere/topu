@@ -1,6 +1,8 @@
 {
   "tasks": {
-    "generate": "npx langium-cli generate"
+    "generate": "npx langium-cli generate",
+    "build:ext": "deno bundle lsp.ts -o extension/out/server.js && deno bundle extension/extension.js -o extension/out/extension.js --external vscode",
+    "package": "deno task build:ext && cd extension && npx -y @vscode/vsce package --no-dependencies -o ../out/topu.vsix"
   },
   "imports": {
     "@cliffy/command": "jsr:@cliffy/command@^1.0.0",
