@@ -15,7 +15,7 @@ Obj:
     (doc=STRING)? name=NameID "{" (properties+=Property ";")* "}";
 
 Record:
-    (doc=STRING)? 'record' name=NameID body=Declarations;
+    (doc=STRING)? 'record' ('(' key=ID? ')')? name=NameID body=Declarations;
 
 Declarations:
     '{' ((properties+=Property | refs+=LocalRef | objects+=Obj | atoms+=AtomDecl) ';')* '}';
