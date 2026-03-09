@@ -28,7 +28,7 @@ export function extractRecord(x: AST.Record, nsid: string) {
         defs: {
             main: {
                 type: "record",
-                key: "tid", // TODO support other key types
+                key: x.key || "tid",
                 description: x.doc,
                 record: {
                     type: "object",
